@@ -635,11 +635,11 @@
     </footer>
 
     <script src="swiper-bundle.min.js"></script>
-    <script>
+     <script>
         // --- ⚙️ ВАШИ ДАННЫЕ ДЛЯ TELEGRAM ⚙️ ---
-const TELEGRAM_BOT_TOKEN = '7868828359:AAEOfs88AMUUT5BpQC2VrKHbCD6R2d4UrjQ';
-const TELEGRAM_CHAT_ID = '-1002927296650';
-// -----------------------------------------
+        const TELEGRAM_BOT_TOKEN = '8477674155:AAHz8QVNl0Y9wm5i21lh9vSnZQKFQTcqVKI';
+        const TELEGRAM_CHAT_ID = '-4887179993';
+        // -----------------------------------------
 
         document.addEventListener('DOMContentLoaded', () => {
 
@@ -715,70 +715,64 @@ const TELEGRAM_CHAT_ID = '-1002927296650';
                 }
             });
 
-          // --- ⚙️ ДАННЫЕ ДЛЯ TELEGRAM ⚙️ ---
-const TELEGRAM_BOT_TOKEN = '7868828359:AAEOfs88AMUUT5BpQC2VrKHbCD6R2d4UrjQ';
-const TELEGRAM_CHAT_ID = '-1002927296650';
-// ----------------------------------
+            document.querySelectorAll('.telegram-form').forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const messageContainer = form.querySelector('.form-message');
+                    const submitButton = form.querySelector('button[type="submit"]');
+                    const currentLang = localStorage.getItem('siteLanguage') || 'ru';
+                    const successMessages = { ru: 'Спасибо! Заявка отправлена.', kz: 'Рахмет! Өтініш жіберілді.' };
+                    const errorMessages = { ru: 'Ошибка отправки. Попробуйте позже.', kz: 'Жіберу қатесі. Кейінірек көріңіз.' };
+                    
+                    const name = this.querySelector('input[name="name"]').value;
+                    const phone = this.querySelector('input[name="phone"]').value;
+                    let messageText = `<b>🔔 Новая заявка с сайта!</b>\n\n<b>Имя:</b> ${name}\n<b>Телефон:</b> <a href="tel:${phone}">${phone}</a>`;
+                    const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage?chat_id=${TELEGRAM_CHAT_ID}&text=${encodeURIComponent(messageText)}&parse_mode=html`;
+                    
+                    submitButton.disabled = true;
 
-document.querySelectorAll('.telegram-form').forEach(form => {
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
+                    fetch(url).then(r => r.json()).then(data => {
+                        if (data.ok) {
+                            messageContainer.textContent = successMessages[currentLang];
+                            messageContainer.className = 'form-message success';
+                            form.reset();
+                        } else { throw new Error('Telegram API error'); }
+                    }).catch(error => {
+                        console.error('Error:', error);
+                        messageContainer.textContent = errorMessages[currentLang];
+                        messageContainer.className = 'form-message error';
+                    }).finally(() => {
+                        submitButton.disabled = false;
+                        setTimeout(() => { messageContainer.textContent = ''; }, 5000);
+                    });
+                });
+            });
 
-    const messageContainer = form.querySelector('.form-message');
-    const submitButton = form.querySelector('button[type="submit"]');
-    const currentLang = localStorage.getItem('siteLanguage') || 'ru';
+            const swiper = new Swiper('.swiper', {
+                loop: true,
+                grabCursor: true,
+                slidesPerView: 1,
+                spaceBetween: 20,
+                pagination: { el: '.swiper-pagination', clickable: true },
+                navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
+                breakpoints: {
+                    768: { slidesPerView: 2, spaceBetween: 30 },
+                    1024: { slidesPerView: 3, spaceBetween: 30 },
+                }
+            });
 
-    const successMessages = { ru: 'Спасибо! Заявка отправлена.', kz: 'Рахмет! Өтініш жіберілді.' };
-    const errorMessages = { ru: 'Ошибка отправки. Попробуйте позже.', kz: 'Жіберу қатесі. Кейінірек көріңіз.' };
+            const revealElements = document.querySelectorAll('.reveal');
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('active');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1 });
 
-    const name = form.querySelector('input[name="name"]').value.trim();
-    const phone = form.querySelector('input[name="phone"]').value.trim();
-
-    if (!name || !phone) {
-      messageContainer.textContent = currentLang === 'ru'
-        ? 'Заполните все поля'
-        : 'Барлық өрістерді толтырыңыз';
-      messageContainer.className = 'form-message error';
-      return;
-    }
-
-    const messageText =
-      `<b>🔔 Новая заявка с сайта!</b>\n\n` +
-      `<b>Имя:</b> ${name}\n` +
-      `<b>Телефон:</b> <a href="tel:${phone}">${phone}</a>\n` +
-      `<b>Страница:</b> ${window.location.href}`;
-
-    submitButton.disabled = true;
-
-    try {
-      // ✅ Отправляем через GET (CORS-friendly)
-      const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage` +
-        `?chat_id=${encodeURIComponent(TELEGRAM_CHAT_ID)}` +
-        `&text=${encodeURIComponent(messageText)}` +
-        `&parse_mode=HTML`;
-
-      const response = await fetch(url);
-      const data = await response.json();
-
-      console.log('Telegram response:', data);
-
-      if (data.ok) {
-        messageContainer.textContent = successMessages[currentLang];
-        messageContainer.className = 'form-message success';
-        form.reset();
-      } else {
-        throw new Error(JSON.stringify(data));
-      }
-    } catch (err) {
-      console.error('Ошибка Telegram:', err);
-      messageContainer.textContent = errorMessages[currentLang];
-      messageContainer.className = 'form-message error';
-    } finally {
-      submitButton.disabled = false;
-      setTimeout(() => { messageContainer.textContent = ''; }, 5000);
-    }
-  });
-});
-</script>
+            revealElements.forEach(el => observer.observe(el));
+        });
+    </script><iframe height="0" width="0" style="display: none; visibility: hidden;" src="./Монтаж систем безопасности в Каскелене _ [Название Компании]_files/saved_resource.html"></iframe>
 			</body>
 </html>
