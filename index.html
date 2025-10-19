@@ -649,143 +649,69 @@
 
     <script src="swiper-bundle.min.js"></script>
      <script>
-        // --- ⚙️ ВАШИ ДАННЫЕ ДЛЯ TELEGRAM ⚙️ ---
-        const TELEGRAM_BOT_TOKEN = '8477674155:AAHz8QVNl0Y9wm5i21lh9vSnZQKFQTcqVKI';
-        const TELEGRAM_CHAT_ID = '-4887179993';
-        // -----------------------------------------
+document.addEventListener('DOMContentLoaded', () => {
 
-        document.addEventListener('DOMContentLoaded', () => {
+  // --- ⚙️ ТВОИ ДАННЫЕ ДЛЯ TELEGRAM ---
+  const TELEGRAM_BOT_TOKEN = '7868828359:AAEOfs88AMUUT5BpQC2VrKHbCD6R2d4UrjQ';
+  const TELEGRAM_CHAT_ID = '-1002927296650';
+  // -----------------------------------
 
-            const burger = document.getElementById('burger');
-            const nav = document.getElementById('header-nav');
-            burger.addEventListener('click', () => nav.classList.toggle('open'));
-            nav.addEventListener('click', (e) => {
-                if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON') {
-                    nav.classList.remove('open');
-                }
-            });
-            
-            document.querySelectorAll('.faq-question').forEach(button => {
-                button.addEventListener('click', () => {
-                    const faqItem = button.parentElement;
-                    const currentlyActive = document.querySelector('.faq-item.active');
-                    if (currentlyActive && currentlyActive !== faqItem) {
-                        currentlyActive.classList.remove('active');
-                    }
-                    faqItem.classList.toggle('active');
-                });
-            });
+  document.querySelectorAll('.telegram-form').forEach(form => {
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
 
-            // === ИСПРАВЛЕННАЯ И УПРОЩЕННАЯ ЛОГИКА ЯЗЫКА (JS) ===
-            const langButtons = { ru: document.getElementById('lang-ru'), kz: document.getElementById('lang-kz') };
-            const htmlEl = document.documentElement;
-            const metaData = {
-                ru: { title: 'Монтаж систем безопасности в Каскелене | [Название Компании]', description: 'Профессиональная установка пожарной сигнализации, видеонаблюдения, СКУД в Каскелене и Карасайском районе.' },
-                kz: { title: 'Қаскелеңде қауіпсіздік жүйелерін орнату | [Компания Атауы]', description: 'Қаскелең мен Қарасай ауданында өрт дабылын, бейнебақылауды, КБЖЖ кәсіби орнату.' }
-            };
-            
-            function switchLanguage(lang) {
-                htmlEl.lang = lang;
-                
-                if (lang === 'kz') {
-                    document.body.classList.add('lang-kz');
-                } else {
-                    document.body.classList.remove('lang-kz');
-                }
+      const messageContainer = form.querySelector('.form-message');
+      const submitButton = form.querySelector('button[type="submit"]');
+      const currentLang = localStorage.getItem('siteLanguage') || 'ru';
+      const successMessages = { ru: 'Спасибо! Заявка отправлена.', kz: 'Рахмет! Өтініш жіберілді.' };
+      const errorMessages = { ru: 'Ошибка отправки. Попробуйте позже.', kz: 'Жіберу қатесі. Кейінірек көріңіз.' };
 
-                Object.keys(langButtons).forEach(key => langButtons[key].classList.toggle('active', key === lang));
-                document.title = metaData[lang].title;
-                document.querySelector('meta[name="description"]').setAttribute('content', metaData[lang].description);
-                localStorage.setItem('siteLanguage', lang);
-            }
+      const name = this.querySelector('input[name="name"]').value.trim();
+      const phone = this.querySelector('input[name="phone"]').value.trim();
 
-            const savedLang = localStorage.getItem('siteLanguage') || 'ru';
-            switchLanguage(savedLang);
-            langButtons.ru.addEventListener('click', () => switchLanguage('ru'));
-            langButtons.kz.addEventListener('click', () => switchLanguage('kz'));
-            // ====================================================
+      if (!name || !phone) {
+        messageContainer.textContent = 'Заполните все поля.';
+        messageContainer.className = 'form-message error';
+        return;
+      }
 
-            const modal = document.getElementById('modal');
-            const modalTitle = document.getElementById('modal-title');
-            const modalText = document.getElementById('modal-text');
-            document.querySelectorAll('.open-modal').forEach(button => {
-                button.addEventListener('click', () => {
-                    const currentLang = localStorage.getItem('siteLanguage') || 'ru';
-                    modalTitle.innerText = button.getAttribute(`data-title-${currentLang}`);
-                    modalText.innerText = button.getAttribute(`data-text-${currentLang}`);
-                    modal.classList.add('active');
-                });
-            });
+      const messageText = `<b>🔔 Новая заявка с сайта!</b>\n\n<b>Имя:</b> ${name}\n<b>Телефон:</b> <a href="tel:${phone}">${phone}</a>`;
+      const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
 
-            modal.addEventListener('click', (e) => {
-                if (e.target.classList.contains('modal-overlay') || e.target.classList.contains('modal-close')) {
-                    modal.classList.remove('active');
-                }
-            });
-            document.addEventListener('keydown', (e) => {
-                if (e.key === "Escape" && modal.classList.contains('active')) {
-                     modal.classList.remove('active');
-                }
-            });
+      submitButton.disabled = true;
 
-            document.querySelectorAll('.telegram-form').forEach(form => {
-                form.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    const messageContainer = form.querySelector('.form-message');
-                    const submitButton = form.querySelector('button[type="submit"]');
-                    const currentLang = localStorage.getItem('siteLanguage') || 'ru';
-                    const successMessages = { ru: 'Спасибо! Заявка отправлена.', kz: 'Рахмет! Өтініш жіберілді.' };
-                    const errorMessages = { ru: 'Ошибка отправки. Попробуйте позже.', kz: 'Жіберу қатесі. Кейінірек көріңіз.' };
-                    
-                    const name = this.querySelector('input[name="name"]').value;
-                    const phone = this.querySelector('input[name="phone"]').value;
-                    let messageText = `<b>🔔 Новая заявка с сайта!</b>\n\n<b>Имя:</b> ${name}\n<b>Телефон:</b> <a href="tel:${phone}">${phone}</a>`;
-                    const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage?chat_id=${TELEGRAM_CHAT_ID}&text=${encodeURIComponent(messageText)}&parse_mode=html`;
-                    
-                    submitButton.disabled = true;
+      fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: TELEGRAM_CHAT_ID,
+          text: messageText,
+          parse_mode: 'HTML'
+        })
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.ok) {
+          messageContainer.textContent = successMessages[currentLang];
+          messageContainer.className = 'form-message success';
+          form.reset();
+        } else {
+          throw new Error(data.description || 'Telegram API error');
+        }
+      })
+      .catch(error => {
+        console.error('Error:', error);
+        messageContainer.textContent = errorMessages[currentLang];
+        messageContainer.className = 'form-message error';
+      })
+      .finally(() => {
+        submitButton.disabled = false;
+        setTimeout(() => { messageContainer.textContent = ''; }, 5000);
+      });
+    });
+  });
 
-                    fetch(url).then(r => r.json()).then(data => {
-                        if (data.ok) {
-                            messageContainer.textContent = successMessages[currentLang];
-                            messageContainer.className = 'form-message success';
-                            form.reset();
-                        } else { throw new Error('Telegram API error'); }
-                    }).catch(error => {
-                        console.error('Error:', error);
-                        messageContainer.textContent = errorMessages[currentLang];
-                        messageContainer.className = 'form-message error';
-                    }).finally(() => {
-                        submitButton.disabled = false;
-                        setTimeout(() => { messageContainer.textContent = ''; }, 5000);
-                    });
-                });
-            });
-
-            const swiper = new Swiper('.swiper', {
-                loop: true,
-                grabCursor: true,
-                slidesPerView: 1,
-                spaceBetween: 20,
-                pagination: { el: '.swiper-pagination', clickable: true },
-                navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
-                breakpoints: {
-                    768: { slidesPerView: 2, spaceBetween: 30 },
-                    1024: { slidesPerView: 3, spaceBetween: 30 },
-                }
-            });
-
-            const revealElements = document.querySelectorAll('.reveal');
-            const observer = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('active');
-                        observer.unobserve(entry.target);
-                    }
-                });
-            }, { threshold: 0.1 });
-
-            revealElements.forEach(el => observer.observe(el));
-        });
-    </script><iframe height="0" width="0" style="display: none; visibility: hidden;" src="saved_resource.html"></iframe>
+});
+</script>
 			</body>
 </html>
