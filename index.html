@@ -715,38 +715,60 @@ const TELEGRAM_CHAT_ID = '-1002927296650';
                 }
             });
 
-            document.querySelectorAll('.telegram-form').forEach(form => {
-                form.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    const messageContainer = form.querySelector('.form-message');
-                    const submitButton = form.querySelector('button[type="submit"]');
-                    const currentLang = localStorage.getItem('siteLanguage') || 'ru';
-                    const successMessages = { ru: 'Спасибо! Заявка отправлена.', kz: 'Рахмет! Өтініш жіберілді.' };
-                    const errorMessages = { ru: 'Ошибка отправки. Попробуйте позже.', kz: 'Жіберу қатесі. Кейінірек көріңіз.' };
-                    
-                    const name = this.querySelector('input[name="name"]').value;
-                    const phone = this.querySelector('input[name="phone"]').value;
-                    let messageText = `<b>🔔 Новая заявка с сайта!</b>\n\n<b>Имя:</b> ${name}\n<b>Телефон:</b> <a href="tel:${phone}">${phone}</a>`;
-                    const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage?chat_id=${TELEGRAM_CHAT_ID}&text=${encodeURIComponent(messageText)}&parse_mode=html`;
-                    
-                    submitButton.disabled = true;
+           document.querySelectorAll('.telegram-form').forEach(form => {
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-                    fetch(url).then(r => r.json()).then(data => {
-                        if (data.ok) {
-                            messageContainer.textContent = successMessages[currentLang];
-                            messageContainer.className = 'form-message success';
-                            form.reset();
-                        } else { throw new Error('Telegram API error'); }
-                    }).catch(error => {
-                        console.error('Error:', error);
-                        messageContainer.textContent = errorMessages[currentLang];
-                        messageContainer.className = 'form-message error';
-                    }).finally(() => {
-                        submitButton.disabled = false;
-                        setTimeout(() => { messageContainer.textContent = ''; }, 5000);
-                    });
-                });
-            });
+    const messageContainer = form.querySelector('.form-message');
+    const submitButton = form.querySelector('button[type="submit"]');
+    const currentLang = localStorage.getItem('siteLanguage') || 'ru';
+
+    const successMessages = { ru: 'Спасибо! Заявка отправлена.', kz: 'Рахмет! Өтініш жіберілді.' };
+    const errorMessages = { ru: 'Ошибка отправки. Попробуйте позже.', kz: 'Жіберу қатесі. Кейінірек көріңіз.' };
+
+    const name = form.querySelector('input[name="name"]').value.trim();
+    const phone = form.querySelector('input[name="phone"]').value.trim();
+
+    if (!name || !phone) {
+      messageContainer.textContent = currentLang === 'ru' ? 'Заполните все поля' : 'Барлық өрістерді толтырыңыз';
+      messageContainer.className = 'form-message error';
+      return;
+    }
+
+    const messageText = `<b>🔔 Новая заявка с сайта!</b>\n\n<b>Имя:</b> ${name}\n<b>Телефон:</b> <a href="tel:${phone}">${phone}</a>`;
+    const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+
+    submitButton.disabled = true;
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: TELEGRAM_CHAT_ID,
+          text: messageText,
+          parse_mode: 'HTML'
+        })
+      });
+
+      const data = await response.json();
+      if (data.ok) {
+        messageContainer.textContent = successMessages[currentLang];
+        messageContainer.className = 'form-message success';
+        form.reset();
+      } else {
+        throw new Error(JSON.stringify(data));
+      }
+    } catch (err) {
+      console.error('Ошибка Telegram:', err);
+      messageContainer.textContent = errorMessages[currentLang];
+      messageContainer.className = 'form-message error';
+    } finally {
+      submitButton.disabled = false;
+      setTimeout(() => { messageContainer.textContent = ''; }, 5000);
+    }
+  });
+});
 
             const swiper = new Swiper('.swiper', {
                 loop: true,
