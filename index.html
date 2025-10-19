@@ -735,28 +735,33 @@ document.querySelectorAll('.telegram-form').forEach(form => {
     const phone = form.querySelector('input[name="phone"]').value.trim();
 
     if (!name || !phone) {
-      messageContainer.textContent = currentLang === 'ru' ? 'Заполните все поля' : 'Барлық өрістерді толтырыңыз';
+      messageContainer.textContent = currentLang === 'ru'
+        ? 'Заполните все поля'
+        : 'Барлық өрістерді толтырыңыз';
       messageContainer.className = 'form-message error';
       return;
     }
 
-    const messageText = `<b>🔔 Новая заявка с сайта!</b>\n\n<b>Имя:</b> ${name}\n<b>Телефон:</b> <a href="tel:${phone}">${phone}</a>`;
-    const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
+    const messageText =
+      `<b>🔔 Новая заявка с сайта!</b>\n\n` +
+      `<b>Имя:</b> ${name}\n` +
+      `<b>Телефон:</b> <a href="tel:${phone}">${phone}</a>\n` +
+      `<b>Страница:</b> ${window.location.href}`;
 
     submitButton.disabled = true;
 
     try {
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          chat_id: TELEGRAM_CHAT_ID,
-          text: messageText,
-          parse_mode: 'HTML'
-        })
-      });
+      // ✅ Отправляем через GET (CORS-friendly)
+      const url = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage` +
+        `?chat_id=${encodeURIComponent(TELEGRAM_CHAT_ID)}` +
+        `&text=${encodeURIComponent(messageText)}` +
+        `&parse_mode=HTML`;
 
+      const response = await fetch(url);
       const data = await response.json();
+
+      console.log('Telegram response:', data);
+
       if (data.ok) {
         messageContainer.textContent = successMessages[currentLang];
         messageContainer.className = 'form-message success';
